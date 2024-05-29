@@ -1,3 +1,6 @@
+import { faker } from '@faker-js/faker';
+const randomEmail = faker.internet.email();
+
 describe('Issue create', () => {
   beforeEach(() => {
     cy.visit('/');
@@ -78,12 +81,91 @@ describe('Issue create', () => {
 
   it('Should validate title is required field if missing', () => {
     // System finds modal for creating issue and does next steps inside of it
-    cy.get('[data-testid="modal:issue-create"]').within(() => {
+    cy.get('[data-testid="modal:issue-create"]', {timeout: 40000}).within(() => {
       // Try to click create issue button without filling any data
       cy.get('button[type="submit"]').click();
 
       // Assert that correct error message is visible
       cy.get('[data-testid="form-field:title"]').should('contain', 'This field is required');
     });
+  });
+
+  it('Should create another issue and validate it successfully', () => {
+    cy.get('[data-testid="modal:issue-create"]').within(() => {
+      
+      cy.get('.ql-editor').type('My bug description');
+      cy.get('.ql-editor').should('have.text', 'My bug description');
+  
+      cy.get('input[name="title"]').type('Bug');
+      cy.get('input[name="title"]').should('have.value', 'Bug');
+  
+      cy.get('[data-testid="select:type"]').click();
+      cy.get('[data-testid="select-option:Bug"]').wait(1000).trigger('mouseover').trigger('click');
+      cy.get('[data-testid="icon:bug"]').should('be.visible');
+  
+      cy.get('[data-testid="select:reporterId"]').click();
+      cy.get('[data-testid="select-option:Pickle Rick"]').click();
+  
+      cy.get('[data-testid="form-field:userIds"]').click();
+      cy.get('[data-testid="select-option:Lord Gaben"]').click();
+  
+      cy.get('[data-testid="form-field:priority"]').click();
+      cy.get('[data-testid="select-option:Highest"]').click();
+  
+      cy.get('button[type="submit"]').click();
+    });
+  
+    cy.get('[data-testid="modal:issue-create"]').should('not.exist');
+    cy.contains('Issue has been successfully created.').should('be.visible');
+  
+    cy.reload();
+    cy.contains('Issue has been successfully created.').should('not.exist');
+  
+    cy.get('[data-testid="board-list:backlog"]')
+      .contains('Bug')
+      .within(() => {
+        cy.get('[data-testid="avatar:Lord Gaben"]').should('be.visible');
+        cy.get('[data-testid="icon:bug"]').should('be.visible');
+      });
+  });
+
+  it('Should create a Task issue with random data and validate it successfully', () => { 
+    const randomTitle = faker.word.sample(); 
+    const randomDescription = faker.word.words(5);
+    
+    cy.get('[data-testid="modal:issue-create"]', { timeout: 30000 }).within(() => {
+    
+    cy.get('.ql-editor').type(randomDescription);
+    cy.get('.ql-editor').should('have.text', randomDescription);
+    
+    cy.get('input[name="title"]').type(randomTitle);
+    cy.get('input[name="title"]').should('have.value', randomTitle);
+    
+    cy.get('[data-testid="select:type"]').should('have.text', 'Task');
+    
+    cy.get('[data-testid="select:priority"]').click();
+    cy.get('[data-testid="select-option:Low"]').click();
+    
+    cy.get('[data-testid="select:reporterId"]').click();
+    cy.get('[data-testid="select-option:Baby Yoda"]').click();
+    
+    cy.get('button[type="submit"]').click();
+    });
+
+    cy.get('[data-testid="modal:issue-create"]').should('not.exist');
+    cy.contains('Issue has been successfully created.').should('be.visible');
+
+    cy.reload();
+    cy.contains('Issue has been successfully created.').should('not.exist');
+
+    cy.get('[data-testid="board-list:backlog"]')
+      .should('be.visible')
+      .and('have.length', '1')
+      .within(() => {
+        cy.get('[data-testid="list-issue"]')
+          .should('have.length', '5')
+          .contains(randomTitle)
+          .siblings()
+      });
   });
 });
