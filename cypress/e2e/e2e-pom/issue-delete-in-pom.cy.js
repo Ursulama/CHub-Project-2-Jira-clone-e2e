@@ -11,10 +11,7 @@ describe('Issue delete', () => {
     cy.contains(issueTitle).click();
     });
   });
-
-  //issue title, that we are testing with, saved into variable
   
-
   it('Should delete issue successfully', () => {
     const expectedAmountOfIssuesAfterDeletion = 3;
 
@@ -26,7 +23,7 @@ describe('Issue delete', () => {
 
   it('Should cancel delete issue process successfully', () => {
     const expectedAmountOfIssuesAfterCancel = 4;
-
+    
     IssueModal.clickDeleteButton();
     IssueModal.cancelDeletion();
     IssueModal.closeDetailModal();
